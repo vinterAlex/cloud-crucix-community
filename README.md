@@ -108,6 +108,12 @@ features above — the complete cost-analysis, workload, and reporting suite.
   - Configurable thresholds and analysis settings
   - No time-window limitations
 
+<img width="2200" height="929" alt="cloud_crucix_second_thumbnail" src="https://github.com/user-attachments/assets/7a011e88-c79c-4245-8a46-e0212cc74a29" />
+
+<img width="1525" height="660" alt="cloud_crucix_thumbnail" src="https://github.com/user-attachments/assets/1144c820-83ac-499c-b956-86026fd6d697" />
+
+
+
 
 REQUIREMENTS
 --------------
