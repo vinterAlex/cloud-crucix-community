@@ -1,0 +1,106 @@
+Cloud Crucix Community Edition - HOW TO RUN
+=============================================
+
+A read-only BigQuery activity dashboard: who queries what, who gets denied,
+and what it costs — from job metadata only, running on your own machine.
+
+This is the Community Edition with the Activity tab fully working.
+Upgrade to the Full Edition for workload insights, cost analysis, and reports.
+
+You need two things:
+  1. Docker Desktop installed and running (or Python 3.10+, see the bottom).
+  2. A Google service-account JSON key that can READ your BigQuery project.
+     Your IT / cloud team can create one. Read access is enough.
+
+
+---------------------------------------------------------------
+STEP 1 - Put your key in place
+---------------------------------------------------------------
+Make a folder named exactly  secrets  next to this file, and drop the
+service-account JSON key into it:
+
+    cloud_crucix_community\secrets\my-key.json
+
+The file name does not matter, as long as it ends in .json.
+
+
+---------------------------------------------------------------
+STEP 2 - Start it
+---------------------------------------------------------------
+Double-click  RUN-ME.bat
+
+It builds the image, finds a free port, starts the dashboard and opens
+the browser.
+
+Or do it by hand, in PowerShell in this folder:
+
+    docker build -t cloud-crucix-community:local .
+    docker run --rm -v "${PWD}/secrets:/app/secrets" -p 127.0.0.1:5006:5006 cloud-crucix-community:local
+
+
+---------------------------------------------------------------
+STEP 3 - Open it
+---------------------------------------------------------------
+The terminal prints who it authenticated as, then:
+
+    OPEN          : http://localhost:5006
+
+Open that link. Pick a project — the region and the on-demand price are
+filled in automatically.
+
+The Activity tab loads automatically with:
+  - Overview stat cards (hover for breakdowns)
+  - Top Users and Top Tables
+  - Daily Spend chart with spike detection
+  - Permission Errors and Failure Reasons
+  - Activity Heatmap
+
+The Workload, Cost & Storage, and Findings & Report tabs show a preview
+of what the Full Edition offers.
+
+
+---------------------------------------------------------------
+WHAT IT COSTS TO RUN
+---------------------------------------------------------------
+The Community Edition runs 6 queries per refresh (Activity tab only).
+At hourly auto-refresh, the floor is roughly $0.30/month.
+
+A ceiling is set in config.yaml (safety.max_bytes_billed_gb, 50 GB per
+query) so a query over a huge project fails loudly instead of billing.
+
+
+---------------------------------------------------------------
+WHAT THE SERVICE ACCOUNT NEEDS
+--------------------------------
+Required:
+    roles/bigquery.jobUser          run the metadata queries
+    roles/bigquery.resourceViewer   see EVERYONE's jobs
+
+Recommended:
+    roles/bigquery.metadataViewer   auto-detect regions and storage
+    roles/browser                   fill the project picker
+
+See PERMISSIONS.txt for the full list.
+
+
+---------------------------------------------------------------
+WITHOUT DOCKER
+----------------
+    pip install -r requirements.txt
+    python bridge.py
+
+Same secrets\ folder, then open http://localhost:5006.
+
+
+---------------------------------------------------------------
+GETTING THE FULL EDITION
+---------------------------
+The Full Edition adds:
+  - Workload tab (scheduled queries, active tables, anomalies)
+  - Cost & Storage tab (cost ranking, storage economics)
+  - Findings & Report tab (8 risk findings, PDF export)
+  - IAM/PAM/audit-log integration
+  - Configurable analysis thresholds
+  - No 30-day time window limit
+
+Contact us for the Full Edition.

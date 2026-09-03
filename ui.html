@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cloud Crucix Community</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:       #0b0e14;
+    --surface:  #131720;
+    --surface2: #0e1219;
+    --border:   #1e2535;
+    --accent:   #00d4aa;
+    --accent2:  #6c8eff;
+    --warn:     #ffb547;
+    --danger:   #ff5c6a;
+    --text:     #e2e8f0;
+    --muted:    #5a6a85;
+    --mono:     'JetBrains Mono', monospace;
+    --sans:     'Inter', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: radial-gradient(circle at 20% 10%, #131825 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Use mono only for code-like data: emails, table names, ids, queries */
+  .mono, input[type="text"], select, .err-row .msg, .anomaly-row .preview, .cost-row .name, .list-row .name {
+    font-family: var(--mono);
+  }
+
+  /* ── Header ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+  header .sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+  }
+  .who-chip {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .who-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+  .who-chip .email { color: var(--text); }
+
+  .btn {
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .btn-primary {
+    background: var(--accent);
+    color: #0b0e14;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .btn-primary:hover { opacity: .9; color: #0b0e14; }
+  .btn-warn {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+  .btn-warn:hover { background: var(--warn); color: #0b0e14; }
+
+  /* ── Setup / diagnostics modal ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(4, 6, 10, .78);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 200;
+    padding: 60px 20px 20px;
+    overflow-y: auto;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    width: min(760px, 100%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.6);
+  }
+  .modal-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-head h2 { font-size: 14px; font-weight: 700; letter-spacing: .2px; }
+  .modal-head .x {
+    margin-left: auto; cursor: pointer; color: var(--muted);
+    font-size: 18px; line-height: 1; padding: 0 4px;
+  }
+  .modal-head .x:hover { color: var(--danger); }
+  .modal-body { padding: 18px 20px 20px; display: grid; gap: 20px; }
+  .modal-section > h3 {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--muted); font-weight: 700; margin-bottom: 8px;
+  }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 4px 12px; font-size: 12px; }
+  .kv dt { color: var(--muted); }
+  .kv dd { font-family: var(--mono); word-break: break-all; }
+  .check {
+    display: grid; grid-template-columns: 16px 1fr auto; gap: 8px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 12px;
+  }
+  .check:last-child { border-bottom: 0; }
+  .check .mark { font-weight: 700; }
+  .check.ok .mark { color: var(--accent); }
+  .check.bad .mark { color: var(--danger); }
+  .check .detail {
+    color: var(--muted); font-family: var(--mono); font-size: 11px;
+    text-align: right; max-width: 340px;
+  }
+  /* Self-cost: measured actuals, then a projection you can dial */
+  .cost-row2 {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 10px; align-items: baseline;
+    padding: 5px 0; border-bottom: 1px dashed var(--border);
+    font-size: 12px;
+  }
+  .cost-row2:last-child { border-bottom: 0; }
+  .cost-row2 .k { color: var(--muted); }
+  .cost-row2 .v { font-family: var(--mono); color: var(--text); }
+  .cost-row2 .sub { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .cost-calc {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 12px; font-size: 12px; color: var(--muted);
+  }
+  .cost-calc input {
+    width: 64px; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--mono); font-size: 12px;
+    padding: 5px 8px; border-radius: 4px; text-align: right;
+  }
+  .proj {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin-top: 10px;
+  }
+  .proj div {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px;
+  }
+  .proj .label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--muted); font-weight: 700;
+  }
+  .proj .value {
+    font-family: var(--mono); font-size: 16px; color: var(--accent);
+    font-weight: 600; margin-top: 3px;
+  }
+  .check-fix { font-size: 11px; color: var(--warn); margin-top: 2px; }
+  .check-fix code { font-family: var(--mono); color: var(--text); }
+  .check-note {
+    margin-top: 10px; padding: 8px 10px;
+    border-left: 2px solid var(--accent);
+    background: var(--surface2);
+    font-size: 11px; color: var(--muted);
+  }
+  .setup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .setup-grid .field { display: flex; flex-direction: column; gap: 4px; }
+  .setup-grid label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .3px;
+    color: var(--muted); font-weight: 600;
+  }
+  .setup-grid input, .setup-grid select {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    font-family: var(--mono); font-size: 12px; padding: 8px 10px; border-radius: 5px;
+  }
+  .setup-grid .wide { grid-column: 1 / -1; }
+  .modal-foot {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; border-top: 1px solid var(--border);
+  }
+  .modal-foot .note { font-size: 11px; color: var(--muted); margin-right: auto; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 2fr auto;
+    gap: 10px;
+    padding: 14px 28px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    align-items: end;
+  }
+  .toolbar .field { display: flex; flex-direction: column; gap: 4px; }
+  .toolbar label {
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  /* Where an auto-discovered value came from (region, price, ...) */
+  .hint {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+    opacity: .65;
+  }
+  .toolbar select, .toolbar input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .toolbar select:focus, .toolbar input:focus { border-color: var(--accent2); }
+  .search-wrap { position: relative; }
+  .search-results {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+  }
+  .search-results.show { display: block; }
+  .search-section {
+    padding: 8px 12px 4px 12px;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .search-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .search-item:hover { background: var(--bg); color: var(--accent2); }
+  .search-item .meta { color: var(--muted); font-size: 10px; }
+  .search-item .preview { color: var(--muted); font-size: 10px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── Stat cards ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    padding: 16px 28px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(0,212,170,.06), transparent 60%);
+    pointer-events: none;
+  }
+  .stat .label {
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .stat .value {
+    font-family: var(--sans);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.5px;
+    line-height: 1.1;
+  }
+  .stat .sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .stat.danger .value { color: var(--danger); }
+  .stat.warn .value { color: var(--warn); }
+  .stat.ok .value { color: var(--accent); }
+  .stat.info .value { color: var(--accent2); }
+
+  /* ── Main grid ── */
+  .main {
+    display: grid;
+    grid-template-columns: 320px 1fr 360px;
+    gap: 12px;
+    padding: 0 28px 16px 28px;
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+  }
+  .panel-header .title {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: var(--text);
+  }
+  .panel-header .count {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .panel-body {
+    padding: 8px 0;
+    overflow-y: auto;
+    max-height: 540px;
+  }
+  .panel-body.tall { max-height: 640px; }
+  .empty { padding: 24px 18px; text-align: center; color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+  /* ── Lists inside panels ── */
+  .list-row {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row:hover { background: rgba(108,142,255,.06); }
+  .list-row.selected { background: rgba(0,212,170,.08); border-left: 2px solid var(--accent); padding-left: 12px; }
+  .list-row .name { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .list-row .stat-num { font-size: 11px; color: var(--accent); font-weight: 600; min-width: 30px; text-align: right; }
+  .list-row .badges { display: flex; gap: 4px; }
+  .badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+  .badge.err { border-color: var(--danger); color: var(--danger); }
+  .badge.warn { border-color: var(--warn); color: var(--warn); }
+
+  /* ── Permission errors panel ── */
+  .perm-errors-panel { border-color: rgba(255,92,106,.4); }
+  .perm-errors-panel .panel-header { background: rgba(255,92,106,.08); }
+  .perm-errors-panel .panel-header .title { color: var(--danger); }
+  .err-row {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .err-row:hover { background: rgba(255,92,106,.05); }
+  .err-row .top {
+    display: flex; justify-content: space-between; gap: 8px;
+    font-size: 10px; color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .err-row .top .who { color: var(--text); font-weight: 500; }
+  .err-row .reason {
+    font-size: 11px;
+    color: var(--danger);
+    margin-bottom: 4px;
+  }
+  .err-row .msg {
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+  }
+  .src-pill {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    font-family: var(--mono);
+    text-transform: lowercase;
+    letter-spacing: 0.2px;
+    vertical-align: baseline;
+  }
+  .src-pill.src-job   { background: rgba(108,142,255,.15); color: var(--accent2); border: 1px solid rgba(108,142,255,.3); }
+  .src-pill.src-audit { background: rgba(255,181,71,.15); color: var(--warn);    border: 1px solid rgba(255,181,71,.3); }
+
+  /* ── Tabs ── */
+  /* Each pane loads its own data the first time it is opened, so the panels you
+     never look at never cost a query. */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 0 28px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .tabs button {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    padding: 11px 16px;
+    cursor: pointer;
+    transition: color .12s, border-color .12s;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tabs button .cost {
+    font-family: var(--mono);
+    font-size: 9px;
+    opacity: .55;
+    margin-left: 6px;
+    font-weight: 400;
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .pane-note {
+    margin: 0 28px 12px;
+    padding: 9px 12px;
+    border-left: 2px solid var(--accent2);
+    background: var(--surface2);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .pane-note b { color: var(--text); }
+
+  /* ── Findings ── */
+  .findings-wrap { padding: 0 28px 16px; display: grid; gap: 10px; }
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-radius: 6px;
+    padding: 13px 16px;
+  }
+  .finding.HIGH   { border-left-color: var(--danger); }
+  .finding.MEDIUM { border-left-color: var(--warn); }
+  .finding.LOW    { border-left-color: var(--accent2); }
+  .finding .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .finding .sev {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: .5px; padding: 2px 6px; border-radius: 3px;
+  }
+  .finding.HIGH .sev   { background: rgba(255,92,106,.15); color: var(--danger); }
+  .finding.MEDIUM .sev { background: rgba(255,181,71,.15); color: var(--warn); }
+  .finding.LOW .sev    { background: rgba(108,142,255,.15); color: var(--accent2); }
+  .finding .name { font-weight: 700; font-size: 13px; }
+  .finding .metrics {
+    margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted);
+  }
+  .finding .metrics b { color: var(--accent); font-weight: 600; }
+  .finding .desc { font-size: 12px; color: var(--text); margin-top: 7px; line-height: 1.5; }
+  .finding .rec {
+    font-size: 12px; margin-top: 6px; color: var(--muted); line-height: 1.5;
+  }
+  .finding .rec b { color: var(--accent); }
+  .finding .examples { margin-top: 9px; display: grid; gap: 5px; }
+  .finding .example {
+    background: var(--surface2); border-radius: 4px; padding: 6px 9px;
+    font-size: 10px; color: var(--muted);
+  }
+  .finding .example .q {
+    font-family: var(--mono); font-size: 10px; color: var(--text);
+    display: block; margin-top: 3px; word-break: break-all;
+  }
+
+  /* ── Storage ── */
+  .storage-cards {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    padding: 0 28px 12px;
+  }
+  .storage-cards .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 13px 15px;
+  }
+  .storage-cards .label {
+    font-size: 9px; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--muted); font-weight: 700;
+  }
+  .storage-cards .value {
+    font-family: var(--mono); font-size: 19px; color: var(--accent);
+    font-weight: 600; margin-top: 4px;
+  }
+  .storage-cards .sub { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  /* ── Report export ── */
+  .report-actions {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 0 28px 12px;
+  }
+  .report-list { padding: 0 28px 20px; display: grid; gap: 5px; }
+  .report-list a {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: 8px 12px;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text); text-decoration: none;
+  }
+  .report-list a:hover { border-color: var(--accent); color: var(--accent); }
+  .report-list .when { color: var(--muted); font-size: 10px; }
+
+  /* ── Daily spend centerpiece ── */
+  /* Plain flexbox bars: no charting library, no layout thrash, and it stays
+     readable at 7 days or 180. */
+  .spend-panel { min-height: 420px; }
+  .spend-panel .panel-body {
+    max-height: none;
+    flex: 1;
+    padding: 16px 18px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #spendChart {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    min-height: 300px;
+  }
+  .spend-bar {
+    flex: 1 1 0;
+    min-width: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    height: 100%;
+    cursor: default;
+  }
+  .spend-bar .fill {
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    opacity: .75;
+    transition: opacity .12s;
+  }
+  .spend-bar:hover .fill { opacity: 1; }
+  .spend-bar.spike .fill { background: var(--warn); opacity: .95; }
+  .spend-bar.has-errors .fill {
+    /* A hairline of danger colour on top, so failures are visible without
+       stealing the bar's meaning (which is spend). */
+    box-shadow: inset 0 2px 0 0 var(--danger);
+  }
+  .spend-bar .tick {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    text-align: center;
+    padding-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .spend-legend {
+    display: flex;
+    gap: 14px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .spend-legend .legend { display: flex; align-items: center; gap: 5px; }
+  .spend-legend .swatch { width: 9px; height: 9px; border-radius: 2px; }
+  .spend-legend .swatch.normal { background: var(--accent); opacity: .75; }
+  .spend-legend .swatch.spike  { background: var(--warn); }
+  .spend-legend .swatch.errbar { background: var(--danger); }
+
+  /* ── Bottom row ── */
+  .bottom-activity { grid-template-columns: repeat(2, 1fr); }
+  .bottom {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 0 28px 24px 28px;
+  }
+  .bottom .panel { min-height: 280px; }
+  .reason-bar {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .reason-bar:last-child { border-bottom: none; }
+  .reason-bar .top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+  .reason-bar .top .label { color: var(--text); }
+  .reason-bar .top .num { color: var(--danger); font-weight: 600; }
+  .reason-bar .track {
+    height: 4px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .reason-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--danger), var(--warn));
+    border-radius: 2px;
+  }
+
+  /* ── Heatmap ── */
+  .heatmap-grid {
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 24px repeat(24, 1fr);
+    gap: 2px;
+    font-size: 9px;
+  }
+  .heatmap-grid .label-row,
+  .heatmap-grid .label-col { color: var(--muted); text-align: center; padding: 2px; }
+  .heatmap-cell {
+    aspect-ratio: 1;
+    border-radius: 1px;
+    background: var(--bg);
+    transition: opacity .15s;
+  }
+  .heatmap-cell:hover { outline: 1px solid var(--accent2); }
+
+  /* ── Anomaly / cost rows ── */
+  .anomaly-row, .cost-row {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .anomaly-row:last-child, .cost-row:last-child { border-bottom: none; }
+  .anomaly-row .top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; font-size: 10px; }
+  .anomaly-row .top .who { color: var(--text); }
+  .anomaly-row .top .ratio { color: var(--warn); font-weight: 600; }
+  .anomaly-row .preview {
+    color: var(--muted); font-size: 10px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cost-row { display: flex; justify-content: space-between; align-items: center; }
+  .cost-row .name { font-size: 11px; }
+  .cost-row .amount { color: var(--accent); font-weight: 600; }
+  .cost-row .bytes { color: var(--muted); font-size: 10px; }
+
+  /* ── Bottom-2 section ── */
+  .bottom2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 28px 24px 28px;
+  }
+  .bottom2 .panel { min-height: 360px; }
+
+  .sched-mini {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .sched-mini .m {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 6px;
+    text-align: center;
+  }
+  .sched-mini .m .v {
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--accent2);
+  }
+  .sched-mini .m.ok .v { color: var(--accent); }
+  .sched-mini .m.fail .v { color: var(--danger); }
+  .sched-mini .m .l {
+    font-size: 9px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  .sched-row, .atbl-row {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sched-row:last-child, .atbl-row:last-child { border-bottom: none; }
+  .sched-row:hover, .atbl-row:hover { background: rgba(108,142,255,.05); }
+
+  .sched-row .top, .atbl-row .top {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .sched-row .config, .atbl-row .name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sched-row .runs, .atbl-row .count {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .sched-row .meta, .atbl-row .meta {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .atbl-row .breakdown {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .atbl-row .breakdown .pill {
+    display: inline-block;
+    margin-right: 5px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background: rgba(0,0,0,.35);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 9px;
+  }
+  .atbl-row .breakdown .pill.ins { color: var(--accent); }
+  .atbl-row .breakdown .pill.upd { color: var(--accent2); }
+  .atbl-row .breakdown .pill.mrg { color: var(--warn); }
+  .atbl-row .breakdown .pill.del { color: var(--danger); }
+  .atbl-row .breakdown .pill.load { color: var(--text); }
+  .sched-row .meta .fail { color: var(--danger); font-weight: 600; }
+
+  @media (max-width: 1400px) {
+    .bottom2 { grid-template-columns: 1fr; }
+  }
+
+  /* ── Tooltip ── */
+  .tip {
+    position: fixed;
+    background: #0e1219;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 11px;
+    width: 520px;
+    max-width: calc(100vw - 24px);
+    max-height: 75vh;
+    overflow-y: auto;
+    pointer-events: none;
+    z-index: 99999;
+    box-shadow: 0 12px 32px rgba(0,0,0,.6);
+    opacity: 0;
+    transition: opacity .12s;
+  }
+  .tip.pinned { pointer-events: auto; }
+  .tip.show { opacity: 1; }
+  .tip .tip-title {
+    font-family: var(--sans);
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    word-break: break-all;
+    font-size: 12px;
+  }
+  .tip .tip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 2px 0;
+    font-size: 11px;
+  }
+  .tip .tip-row > span:first-child { color: var(--muted); }
+  .tip .tip-row > span:last-child { color: var(--text); font-family: var(--mono); }
+  .tip .tip-block {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: #0b0e14;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #a8d8b0;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  .tip .tip-examples {
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+  .tip .tip-example {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+  }
+  .tip .tip-example:last-child { border-bottom: none; }
+  .tip .tip-example .who { color: var(--accent2); font-family: var(--mono); margin-right: 6px; }
+  .tip .tip-example .when { color: var(--muted); float: right; }
+  .tip .tip-example .what { color: var(--text); margin-top: 3px; line-height: 1.4; }
+  .tip .tip-section {
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-size: 10px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+  .tip .tip-section:first-child { margin-top: 0; }
+  .tip .tip-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    table-layout: fixed;
+  }
+  .tip .tip-table td {
+    padding: 4px 8px 4px 0;
+    font-family: var(--mono);
+    vertical-align: top;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .tip .tip-table tr:nth-child(even) td { background: rgba(255,255,255,.025); }
+  .tip .tip-table td:first-child { color: var(--text); }
+  .tip .tip-table td:not(:first-child) { color: var(--muted); text-align: right; white-space: nowrap; }
+
+  /* Card layout for PAM entitlements (replaces a too-cramped 3-col table) */
+  .tip-pam-list { display: flex; flex-direction: column; gap: 5px; }
+  .tip-pam-item {
+    background: rgba(108,142,255,.06);
+    border-left: 2px solid var(--accent2);
+    border-radius: 3px;
+    padding: 7px 10px;
+  }
+  .tip-pam-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+  .tip-pam-meta {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-size: 10px;
+  }
+  .tip-pam-roles {
+    flex: 1;
+    min-width: 0;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .tip-pam-dur {
+    white-space: nowrap;
+    color: var(--accent);
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  /* Pin / unpin states */
+  .tip.pinned {
+    pointer-events: auto;
+    user-select: text;
+    border-left-color: var(--accent);
+    box-shadow: 0 12px 32px rgba(0,212,170,.35);
+  }
+  .tip.pinned .tip-block, .tip.pinned .tip-table td { user-select: text; }
+  .tip .pin-close {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1;
+    width: 22px;
+    height: 22px;
+    text-align: center;
+    border-radius: 4px;
+    font-family: var(--sans);
+  }
+  .tip .pin-close:hover { color: var(--danger); background: var(--bg); }
+  .tip .pin-hint {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+    text-align: right;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .tip.pinned .pin-hint { display: none; }
+
+  /* Stat cards become clickable */
+  .stat { cursor: pointer; transition: border-color .15s; }
+  .stat:hover { border-color: var(--accent2); }
+
+  /* Filter chip */
+  .filter-chip {
+    margin: 8px 14px 4px 14px;
+    padding: 6px 10px;
+    background: rgba(108,142,255,.12);
+    border: 1px solid var(--accent2);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--accent2);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .filter-chip.show { display: flex; }
+  .filter-chip .x {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .filter-chip .x:hover { color: var(--danger); }
+
+  /* Reason bar — clickable */
+  .reason-bar { cursor: pointer; transition: background .15s; }
+  .reason-bar:hover { background: rgba(108,142,255,.05); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--accent);
+    color: #0b0e14;
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 12px;
+    box-shadow: 0 8px 24px rgba(0,212,170,.35);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .25s, transform .25s;
+    pointer-events: none;
+    z-index: 9999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: var(--danger); color: #fff; box-shadow: 0 8px 24px rgba(255,92,106,.35); }
+  .toast.warn { background: var(--warn); color: #0b0e14; }
+
+  /* ── Spinner ── */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading { padding: 24px; text-align: center; color: var(--muted); font-size: 11px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 1400px) {
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .bottom { grid-template-columns: repeat(2, 1fr); }
+    .main { grid-template-columns: 1fr; }
+    .storage-cards { grid-template-columns: repeat(2, 1fr); }
+    .spend-panel { min-height: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>◇ Cloud Crucix <span style="font-size:11px;font-weight:600;background:rgba(0,212,170,.12);border:1px solid rgba(0,212,170,.3);border-radius:999px;padding:2px 8px;color:var(--accent);vertical-align:middle;margin-left:4px;">Community</span></h1>
+    <div class="sub">Read-only BigQuery dashboard · Activity insights</div>
+  </div>
+  <div class="who-chip" id="whoChip">
+    <div class="dot"></div>
+    <span class="email" id="whoEmail">checking...</span>
+  </div>
+  <span class="who-chip" id="freshChip" style="margin-left:0;">
+    <span id="lastRefresh">—</span>
+    <span style="opacity:.5">·</span>
+    <span id="autoRefreshChip">auto-refresh off</span>
+  </span>
+  <button class="btn" id="setupBtn" onclick="openSetup()" title="Identity, permissions, pricing and what this costs">⚙ Setup</button>
+  <button class="btn btn-warn" id="reloadCredsBtn" onclick="reloadCredentials()"
+          title="Re-read the service-account key from secrets/ and drop cached tokens">↻ Reload key</button>
+  <button class="btn btn-primary" id="refreshBtn" onclick="refreshAll()">↻ Refresh</button>
+</header>
+
+<!-- Setup: who we are, what we're allowed to read, and the rates in use. -->
+<div class="modal-backdrop" id="setupModal" onclick="if (event.target === this) closeSetup()">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>⚙ Setup &amp; health</h2>
+      <span class="x" onclick="closeSetup()">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <h3>Identity</h3>
+        <dl class="kv" id="setupIdentity"><dt>loading…</dt><dd></dd></dl>
+      </div>
+      <div class="modal-section">
+        <h3>Permission checks <span class="hint" id="setupChecksCount"></span></h3>
+        <div id="setupChecks"><div class="empty">running…</div></div>
+      </div>
+      <div class="modal-section">
+        <h3>What Crucix itself costs <span class="hint" id="selfCostWindow"></span></h3>
+        <div id="selfCost"><div class="empty">measuring…</div></div>
+        <div class="cost-calc">
+          <label for="refreshRate">If someone refreshes</label>
+          <input id="refreshRate" type="number" min="0" max="240" step="1" value="4"
+                 oninput="renderSelfCostProjection()" />
+          <label for="refreshRate">times per hour, around the clock:</label>
+        </div>
+        <div id="selfCostProjection"></div>
+        <h3 style="margin-top:16px;">What each part of the UI costs</h3>
+        <div id="costCatalogue"></div>
+      </div>
+
+      <div class="modal-section">
+        <h3>Settings — discovered automatically, override if you know better</h3>
+        <div class="setup-grid">
+          <div class="field">
+            <label>Region</label>
+            <input id="setRegion" type="text" placeholder="auto-detect" />
+          </div>
+          <div class="field">
+            <label>Default time range (days)</label>
+            <input id="setDays" type="number" min="1" max="180" />
+          </div>
+          <div class="field">
+            <label>Auto-refresh every (minutes, 0 = off)</label>
+            <input id="setAutoRefresh" type="number" min="0" max="1440" step="5" />
+          </div>
+          <div class="field wide">
+            <label>Project list (comma-separated — blank to discover)</label>
+            <input id="setProjects" type="text" placeholder="auto-discover from the service account" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span class="note" id="setupNote"></span>
+      <span style="font-size:10px;padding:3px 10px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:999px;color:var(--accent);margin-right:8px;">Community Edition — pricing &amp; analysis available in Full</span>
+      <button class="btn" onclick="closeSetup()">Close</button>
+      <button class="btn btn-primary" onclick="saveSetup()">Save settings</button>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="field">
+    <label>GCP Project</label>
+    <select id="projectSelect" onchange="onProjectChange()">
+      <option value="">Loading projects…</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Region <span id="regionSource" class="hint"></span></label>
+    <select id="regionSelect" onchange="onRegionChange()">
+      <option value="">detecting…</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Time Range</label>
+    <select id="daysSelect" onchange="refreshAll()">
+      <option value="1">Last 24 hours</option>
+      <option value="7" selected>Last 7 days</option>
+      <option value="14">Last 14 days</option>
+      <option value="30">Last 30 days</option>
+      <option value="90">Last 90 days</option>
+      <option value="180">Last 180 days</option>
+    </select>
+  </div>
+  <div class="field search-wrap">
+    <label>Search (email / table / query text)</label>
+    <input id="searchInput" type="text" placeholder="e.g. someone@example.com  or  customer_dim  or  WHERE country=" autocomplete="off" />
+    <div class="search-results" id="searchResults"></div>
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    <button class="btn" onclick="document.getElementById('searchInput').value=''; closeSearch(); clearSelection();">Clear</button>
+  </div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <button data-tab="activity" class="active" onclick="showTab('activity')">Activity<span class="cost" title="queries per load">6q</span></button>
+  <button data-tab="workload" onclick="showTab('workload')">Workload <span style="font-size:9px;opacity:.6;">🔒</span><span class="cost" title="queries per load">5q</span></button>
+  <button data-tab="cost" onclick="showTab('cost')">Cost &amp; Storage <span style="font-size:9px;opacity:.6;">🔒</span><span class="cost" title="queries per load">2q</span></button>
+  <button data-tab="findings" onclick="showTab('findings')">Findings &amp; Report <span style="font-size:9px;opacity:.6;">🔒</span><span class="cost" title="queries per load">3q</span></button>
+</div>
+
+<section class="tab-pane active" id="tab-activity">
+<div class="stats" id="statsRow">
+  <div class="stat info"
+       onmouseenter="showStatTip('total', event)" onmousemove="tipMove(event)" onmouseleave="tipHide()" onclick="tipPin(event)">
+    <div class="label">Total Jobs</div><div class="value" id="s-total">—</div><div class="sub" id="s-total-sub">&nbsp;</div></div>
+  <div class="stat ok"
+       onmouseenter="showStatTip('successful', event)" onmousemove="tipMove(event)" onmouseleave="tipHide()" onclick="tipPin(event)">
+    <div class="label">Successful</div><div class="value" id="s-ok">—</div><div class="sub" id="s-ok-sub">&nbsp;</div></div>
+  <div class="stat danger"
+       onmouseenter="showStatTip('failed', event)" onmousemove="tipMove(event)" onmouseleave="tipHide()" onclick="tipPin(event)">
+    <div class="label">Failed</div><div class="value" id="s-fail">—</div><div class="sub" id="s-fail-sub">&nbsp;</div></div>
+  <div class="stat warn"
+       onmouseenter="showStatTip('perm', event)" onmousemove="tipMove(event)" onmouseleave="tipHide()" onclick="tipPin(event)">
+    <div class="label">Permission Errors</div><div class="value" id="s-perm">—</div><div class="sub" id="s-perm-sub">&nbsp;</div></div>
+  <div class="stat info"
+       onmouseenter="showStatTip('users', event)" onmousemove="tipMove(event)" onmouseleave="tipHide()" onclick="tipPin(event)">
+    <div class="label">Unique Users</div><div class="value" id="s-users">—</div><div class="sub">&nbsp;</div></div>
+  <div class="stat ok"
+       onmouseenter="showStatTip('bytes', event)" onmousemove="tipMove(event)" onmouseleave="tipHide()" onclick="tipPin(event)">
+    <div class="label">Bytes Processed</div><div class="value" id="s-bytes">—</div><div class="sub" id="s-bytes-sub">&nbsp;</div></div>
+</div>
+
+<div class="main">
+
+  <!-- LEFT column -->
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+    <div class="panel">
+      <div class="panel-header"><span class="title">Top Users</span><span class="count" id="usersCount"></span></div>
+      <div class="panel-body" id="usersList"><div class="loading">—</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="title">Top Tables</span><span class="count" id="tablesCount"></span></div>
+      <div class="panel-body" id="tablesList"><div class="loading">—</div></div>
+    </div>
+  </div>
+
+  <!-- CENTER: daily spend, with spike days called out -->
+  <div class="panel spend-panel">
+    <div class="panel-header">
+      <span class="title">Daily Spend</span>
+      <span class="count" id="spendSummary"></span>
+    </div>
+    <div class="panel-body">
+      <div id="spendChart"><div class="loading">—</div></div>
+      <div class="spend-legend">
+        <div class="legend"><div class="swatch normal"></div> typical day</div>
+        <div class="legend"><div class="swatch spike"></div> spike — over 2× the median day</div>
+        <div class="legend"><div class="swatch errbar"></div> had failures</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT column -->
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+    <div class="panel perm-errors-panel">
+      <div class="panel-header"><span class="title">⚠ Permission Errors</span><span class="count" id="permCount"></span></div>
+      <div class="filter-chip" id="permFilterChip">
+        <span>Filtering by: <strong id="permFilterChipUser"></strong></span>
+        <span class="x" onclick="clearUserFilter()">×</span>
+      </div>
+      <div class="panel-body tall" id="permErrorsList"><div class="loading">—</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom bottom-activity">
+  <div class="panel">
+    <div class="panel-header"><span class="title">Failure Reasons</span></div>
+    <div class="panel-body" id="reasonsList"><div class="loading">—</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span class="title">Activity Heatmap</span><span class="count">UTC</span></div>
+    <div id="heatmapWrap"><div class="loading">—</div></div>
+  </div>
+</div>
+</section>
+
+<!-- WORKLOAD: what runs on a schedule, what writes, what looks abnormal -->
+<section class="tab-pane" id="tab-workload">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:40px;">
+    <div style="font-size:48px;margin-bottom:16px;">📊</div>
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--accent);">Workload Insights</h2>
+    <p style="color:var(--muted);max-width:420px;margin-bottom:20px;line-height:1.6;">
+      See scheduled queries, most active tables with write patterns, and detect anomalies — 
+      workload behaviour that quietly drives up your bill.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Scheduled Queries</div>
+        <div style="font-size:12px;color:var(--text);">Track every scheduled query's run history, cost, and failure rate.</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Active Tables</div>
+        <div style="font-size:12px;color:var(--text);">Rank tables by write activity — the real cost drivers behind ingestion.</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Anomaly Detection</div>
+        <div style="font-size:12px;color:var(--text);">Flag users whose activity spikes ≥100× their median.</div>
+      </div>
+    </div>
+    <div style="padding:10px 20px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:8px;font-size:12px;color:var(--accent);">
+      Available in <b>Cloud Crucix Full Edition</b>
+    </div>
+  </div>
+</section>
+
+<!-- COST & STORAGE: query spend per person, and what storage costs per month -->
+<section class="tab-pane" id="tab-cost">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:40px;">
+    <div style="font-size:48px;margin-bottom:16px;">💰</div>
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--accent);">Cost &amp; Storage</h2>
+    <p style="color:var(--muted);max-width:420px;margin-bottom:20px;line-height:1.6;">
+      Break down query costs by user and table, see storage economics with logical vs 
+      physical billing comparison, and find where your BigQuery spend actually goes.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Cost Ranking</div>
+        <div style="font-size:12px;color:var(--text);">Who spends what — per user, per table, with live pricing from the Billing Catalog.</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Storage Breakdown</div>
+        <div style="font-size:12px;color:var(--text);">Table-level storage costs, logical vs physical billing, and time-travel bytes.</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Savings Estimate</div>
+        <div style="font-size:12px;color:var(--text);">Switching from logical to physical billing — projected monthly saving per dataset.</div>
+      </div>
+    </div>
+    <div style="padding:10px 20px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:8px;font-size:12px;color:var(--accent);">
+      Available in <b>Cloud Crucix Full Edition</b>
+    </div>
+  </div>
+</section>
+
+<!-- FINDINGS & REPORT: the deep pull, plus export -->
+<section class="tab-pane" id="tab-findings">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:40px;">
+    <div style="font-size:48px;margin-bottom:16px;">🔍</div>
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:8px;color:var(--accent);">Findings &amp; Report</h2>
+    <p style="color:var(--muted);max-width:420px;margin-bottom:20px;line-height:1.6;">
+      Run deep analysis across your job history to detect the 8 patterns that inflate 
+      BigQuery bills — then export a full PDF report with partition/cluster inventory.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Risk Findings</div>
+        <div style="font-size:12px;color:var(--text);">SELECT *, missing partition filters, cross-region queries, zombie tables, and more.</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Cost Attribution</div>
+        <div style="font-size:12px;color:var(--text);">Trace every GB and dollar to the user, table, and query that caused it.</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;text-align:left;max-width:200px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">PDF Export</div>
+        <div style="font-size:12px;color:var(--text);">Full report with partition/cluster inventory, ready to share with your team.</div>
+      </div>
+    </div>
+    <div style="padding:10px 20px;background:rgba(0,212,170,.08);border:1px solid rgba(0,212,170,.2);border-radius:8px;font-size:12px;color:var(--accent);">
+      Available in <b>Cloud Crucix Full Edition</b>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+// The bridge serves this page, so talk to whatever origin it came from.
+// Opening ui.html straight off disk (file://) still works against a local run.
+const BRIDGE = (location.protocol === 'http:' || location.protocol === 'https:')
+  ? location.origin
+  : 'http://localhost:5006';
+let userFilter = '';                  // active "filter by user email" set when clicking Top Users
+let lastReasonsData = [];             // cached for tooltip on Failure Reasons
+let lastMouseEv = null;               // latest mouse event, so we can re-position after async work
+
+// ─── Utility ──────────────────────────────────────────────────────────────────
+function fmtNum(n) {
+  if (n == null) return '—';
+  n = Number(n);
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + 'T';
+  if (n >= 1e9)  return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6)  return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3)  return (n / 1e3).toFixed(1) + 'K';
+  return String(Math.round(n));
+}
+function fmtBytes(b) {
+  if (b == null) return '—';
+  b = Number(b);
+  const u = ['B','KB','MB','GB','TB','PB'];
+  let i = 0;
+  while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+  return b.toFixed(b < 10 ? 2 : 1) + ' ' + u[i];
+}
+// Currency follows the bridge's pricing config (default USD).
+let CURRENCY_SYMBOL = '$';
+const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', GBP: '£', NOK: 'kr ', SEK: 'kr ', DKK: 'kr ' };
+function fmtUSD(v) {
+  if (v == null) return '—';
+  v = Number(v);
+  const s = CURRENCY_SYMBOL;
+  if (v >= 1000) return s + (v / 1000).toFixed(2) + 'K';
+  if (v >= 1) return s + v.toFixed(2);
+  return s + v.toFixed(4);
+}
+function fmtTime(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString(); } catch { return iso; }
+}
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Tooltip helpers ─────────────────────────────────────────────────────────
+let tipPinned = false;
+function tipEl() {
+  let el = document.getElementById('crucix-tip');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'crucix-tip';
+    el.className = 'tip';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function tipShow(html, ev) {
+  if (tipPinned) return;  // don't overwrite a pinned tooltip
+  const el = tipEl();
+  el.innerHTML = html + '<div class="pin-hint">click to pin · drag-select to copy</div>';
+  tipMove(ev);
+  el.classList.add('show');
+  el.classList.remove('pinned');
+}
+function tipMove(ev) {
+  if (tipPinned) return;
+  const el = document.getElementById('crucix-tip');
+  if (!el) return;
+  const w = el.offsetWidth || 460;
+  const h = el.offsetHeight || 200;
+  let x = ev.clientX + 14;
+  let y = ev.clientY + 14;
+  if (x + w > window.innerWidth - 8) x = ev.clientX - w - 14;
+  if (y + h > window.innerHeight - 8) y = ev.clientY - h - 14;
+  el.style.left = Math.max(8, x) + 'px';
+  el.style.top = Math.max(8, y) + 'px';
+}
+function tipHide() {
+  if (tipPinned) return;
+  const el = document.getElementById('crucix-tip');
+  if (el) el.classList.remove('show');
+}
+function tipPin(ev) {
+  const el = document.getElementById('crucix-tip');
+  if (!el || !el.classList.contains('show')) return;
+  if (ev) ev.stopPropagation();
+  tipPinned = true;
+  el.classList.add('pinned');
+  if (!el.querySelector('.pin-close')) {
+    const close = document.createElement('div');
+    close.className = 'pin-close';
+    close.textContent = '×';
+    close.onclick = (e) => { e.stopPropagation(); tipUnpin(); };
+    el.appendChild(close);
+  }
+}
+function tipUnpin() {
+  tipPinned = false;
+  const el = document.getElementById('crucix-tip');
+  if (!el) return;
+  el.classList.remove('pinned', 'show');
+  const close = el.querySelector('.pin-close');
+  if (close) close.remove();
+}
+// Click anywhere outside a pinned tooltip — close it.
+document.addEventListener('click', (e) => {
+  if (!tipPinned) return;
+  if (e.target.closest('#crucix-tip')) return;
+  tipUnpin();
+});
+// Cheap mouse tracker so async-resolved tooltips can reposition to where the cursor actually is.
+document.addEventListener('mousemove', (e) => { lastMouseEv = e; });
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.remove('error','warn');
+  if (type) t.classList.add(type);
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+async function api(path) {
+  const project = document.getElementById('projectSelect').value;
+  const region = document.getElementById('regionSelect').value;
+  const days = document.getElementById('daysSelect').value;
+  const sep = path.includes('?') ? '&' : '?';
+  const url = `${BRIDGE}${path}${sep}project=${encodeURIComponent(project)}&region=${encodeURIComponent(region)}&days=${days}`;
+  const r = await fetch(url);
+  if (!r.ok && r.status !== 400) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+
+// ─── Whoami / credentials ─────────────────────────────────────────────────────
+async function loadWhoAmI() {
+  try {
+    const r = await fetch(`${BRIDGE}/whoami`);
+    const d = await r.json();
+    document.getElementById('whoEmail').textContent = d.account || '(unknown)';
+    const chip = document.getElementById('whoChip');
+    if (chip) chip.title = `${d.auth_mode || 'unknown'}\n${d.source || ''}`;
+  } catch {
+    document.getElementById('whoEmail').textContent = '(bridge offline)';
+    document.querySelector('.who-chip .dot').style.background = 'var(--danger)';
+    document.querySelector('.who-chip .dot').style.boxShadow = '0 0 6px var(--danger)';
+  }
+}
+
+function invalidateIdentityCaches() {
+  // Community Edition keeps no identity caches.
+}
+
+// Swap the .json key in secrets/ and press this: the bridge re-reads it and
+// forgets every cached token, region and price. There is no interactive login.
+async function reloadCredentials() {
+  try {
+    const r = await fetch(`${BRIDGE}/reload_credentials`, { method: 'POST' });
+    const d = await r.json();
+    if (d.status === 'error') { showToast(d.message, 'error'); return; }
+    showToast(d.message || 'Credentials reloaded — refreshing…');
+    invalidateIdentityCaches();
+    await loadWhoAmI();
+    // A different service account may see a different set of projects.
+    loadProjects();
+  } catch (e) {
+    showToast('Reloading credentials failed: ' + e.message, 'error');
+  }
+}
+
+// ─── Projects ────────────────────────────────────────────────────────────────
+async function loadProjects() {
+  const sel = document.getElementById('projectSelect');
+  try {
+    const r = await fetch(`${BRIDGE}/projects`);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    const projects = d.projects || [];
+    if (projects.length === 0) {
+      sel.innerHTML = '<option value="">(no accessible projects)</option>';
+      return;
+    }
+    const ids = projects.map(p => p.projectId);
+    const stored = localStorage.getItem('crucix_project');
+    const remembered = ids.includes(stored) ? stored : ids[0];
+    sel.innerHTML = projects.map(p =>
+      `<option value="${esc(p.projectId)}" ${p.projectId === remembered ? 'selected' : ''}>${esc(p.projectId)}</option>`
+    ).join('');
+    onProjectChange();
+  } catch (e) {
+    sel.innerHTML = `<option value="">(error: ${esc(e.message)})</option>`;
+    showToast('Could not list projects — check the service account has access', 'error');
+  }
+}
+async function onProjectChange() {
+  localStorage.setItem('crucix_project', document.getElementById('projectSelect').value);
+  // The region list is per-project (INFORMATION_SCHEMA lives per region), so it
+  // has to be resolved before any panel query goes out.
+  await loadRegions();
+  refreshAll();
+}
+
+// ─── Regions (auto-detected from the project's dataset locations) ─────────────
+async function loadRegions() {
+  const sel = document.getElementById('regionSelect');
+  const hint = document.getElementById('regionSource');
+  const project = document.getElementById('projectSelect').value;
+  if (!project) return;
+  const remembered = localStorage.getItem('crucix_region_' + project) || '';
+  try {
+    const r = await fetch(`${BRIDGE}/regions?project=${encodeURIComponent(project)}`);
+    const d = await r.json();
+    const regions = d.regions || [];
+    const selected = regions.includes(remembered) ? remembered : (d.selected || regions[0]);
+    sel.innerHTML = regions.map(rg =>
+      `<option value="${esc(rg)}" ${rg === selected ? 'selected' : ''}>${esc(rg.replace(/^region-/, ''))}</option>`
+    ).join('');
+    hint.textContent = d.error ? '· detection failed' : `· ${d.source || ''}`;
+    hint.title = d.error || (d.detected || []).join(', ');
+  } catch (e) {
+    // Never leave the picker empty: the bridge falls back to region-eu anyway.
+    sel.innerHTML = '<option value="region-eu">eu</option>';
+    hint.textContent = '· fallback';
+    hint.title = e.message;
+  }
+}
+function onRegionChange() {
+  const project = document.getElementById('projectSelect').value;
+  localStorage.setItem('crucix_region_' + project, document.getElementById('regionSelect').value);
+  refreshAll();
+}
+
+// ─── Setup & health ──────────────────────────────────────────────────────────
+// A service account is usually granted a narrow set of roles, so "the panel is
+// empty" is the most common failure. This shows which API is refusing, plus the
+// settings the bridge could not discover on its own.
+function openSetup() {
+  document.getElementById('setupModal').classList.add('show');
+  loadSetup();
+  loadDiagnostics();
+  loadSelfCost();
+}
+function closeSetup() {
+  document.getElementById('setupModal').classList.remove('show');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSetup(); });
+
+async function loadSetup() {
+  const project = document.getElementById('projectSelect').value;
+  try {
+    const r = await fetch(`${BRIDGE}/settings?project=${encodeURIComponent(project)}`);
+    const d = await r.json();
+    const s = d.settings || {};
+    const a = d.auth || {};
+    const keys = (a.key_files_found || []);
+
+    document.getElementById('setupIdentity').innerHTML = `
+      <dt>authenticating as</dt><dd>${esc(a.principal || '—')}</dd>
+      <dt>auth mode</dt><dd>${esc(a.mode || '—')}</dd>
+      <dt>credentials</dt><dd>${esc(a.source || '—')}</dd>
+      <dt>keys in secrets/</dt><dd>${keys.length ? esc(keys.join(', ')) : '(none found)'}</dd>
+      <dt>key's own project</dt><dd>${esc(d.credentials_project || '—')}</dd>
+      <dt>config file</dt><dd>${esc(d.config_file || '(defaults only)')}</dd>
+    `;
+
+    const p = s.pricing || {};
+    document.getElementById('setRegion').value = s.region || '';
+    document.getElementById('setDays').value = s.days == null ? 7 : s.days;
+    // localStorage wins for this one: it is a per-viewer preference, and the
+    // config value is only the default for someone who has not set it.
+    const storedAuto = localStorage.getItem('crucix_auto_refresh');
+    document.getElementById('setAutoRefresh').value = storedAuto !== null
+      ? storedAuto
+      : ((s.ui || {}).auto_refresh_minutes == null ? 60 : s.ui.auto_refresh_minutes);
+    document.getElementById('setProjects').value = (s.projects || []).join(', ');
+    document.getElementById('setupNote').textContent = d.overrides_file
+      ? 'Saved settings live in config.local.json'
+      : 'Blank fields are discovered automatically';
+  } catch (e) {
+    document.getElementById('setupIdentity').innerHTML =
+      `<dt>error</dt><dd>${esc(e.message)}</dd>`;
+  }
+}
+
+async function loadDiagnostics() {
+  const wrap = document.getElementById('setupChecks');
+  const count = document.getElementById('setupChecksCount');
+  const project = document.getElementById('projectSelect').value;
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const r = await fetch(`${BRIDGE}/diagnostics?project=${encodeURIComponent(project)}`);
+    const d = await r.json();
+    const checks = d.checks || {};
+    count.textContent = `· ${d.ok_count}/${d.total} available`;
+    wrap.innerHTML = Object.keys(checks).map(k => {
+      const c = checks[k];
+      // A failing check is only useful with the fix and the consequence next to it.
+      const fixLine = c.ok ? '' :
+        `<div class="check-fix">grant <code>${esc(c.fix)}</code> — otherwise ${esc(c.impact)}</div>`;
+      return `<div class="check ${c.ok ? 'ok' : 'bad'}">
+        <span class="mark">${c.ok ? '✓' : '✕'}</span>
+        <span>${esc(c.label)}${fixLine}</span>
+        <span class="detail" title="${esc(c.detail)}">${esc(c.detail)}</span>
+      </div>`;
+    }).join('');
+    if (d.note) {
+      wrap.innerHTML += `<div class="check-note">${esc(d.note)}</div>`;
+    }
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">could not run checks: ${esc(e.message)}</div>`;
+  }
+}
+
+// ─── What Crucix itself costs ────────────────────────────────────────────────
+// Crucix reads the same view that logs its own jobs, so this is measured, not
+// guessed. It is one extra query, hence only on opening Setup.
+let selfCostData = null;
+
+async function loadSelfCost() {
+  const wrap = document.getElementById('selfCost');
+  const project = document.getElementById('projectSelect').value;
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  document.getElementById('selfCostProjection').innerHTML = '';
+  if (!project) { wrap.innerHTML = '<div class="empty">pick a project first</div>'; return; }
+  try {
+    const r = await fetch(`${BRIDGE}/self_cost?project=${encodeURIComponent(project)}&days=30`);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    selfCostData = d;
+    const m = d.measured || {};
+    document.getElementById('selfCostWindow').textContent =
+      `· measured over the last ${d.days_window} days`;
+
+    if (!m.queries) {
+      wrap.innerHTML = `<div class="empty">no billed queries recorded yet — refresh the
+        dashboard once, then reopen this panel</div>`;
+    } else {
+      wrap.innerHTML = `
+        <div class="cost-row2"><span class="k">billed so far</span>
+          <span class="v">${fmtUSD(m.total_usd)}</span>
+          <span class="sub">${fmtBytes(m.bytes_billed)} over ${fmtNum(m.queries)} queries</span></div>
+        <div class="cost-row2"><span class="k">per dashboard refresh</span>
+          <span class="v">${fmtUSD(m.per_refresh_usd)}</span>
+          <span class="sub">${d.queries_per_refresh} queries</span></div>
+        <div class="cost-row2"><span class="k">busiest day so far</span>
+          <span class="v">${fmtUSD(Math.max(...(d.daily || []).map(x => x.estimated_usd), 0))}</span>
+          <span class="sub">${m.active_days} day(s) with activity</span></div>
+        <div class="cost-row2"><span class="k">sitting idle</span>
+          <span class="v">${fmtUSD(0)}</span>
+          <span class="sub">no polling — queries run only when you refresh</span></div>`;
+    }
+    renderCostCatalogue(d);
+    // Default the projection dial to the actual auto-refresh cadence, so the
+    // figure shown is the one this setup will really produce.
+    const rateInput = document.getElementById('refreshRate');
+    if (autoRefreshMinutes > 0) {
+      rateInput.value = (60 / autoRefreshMinutes).toFixed(
+        autoRefreshMinutes > 60 ? 2 : 0);
+    }
+    renderSelfCostProjection();
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">could not measure: ${esc(e.message)}</div>`;
+  }
+}
+
+// Every action in the UI, priced from the measured per-query cost. This is the
+// answer to "what does the whole thing cost", computed rather than asserted.
+function renderCostCatalogue(d) {
+  const wrap = document.getElementById('costCatalogue');
+  if (!wrap) return;
+  const actions = (d || {}).actions || [];
+  if (!actions.length) { wrap.innerHTML = ''; return; }
+  const m = d.measured || {};
+  const priced = m.per_query_usd > 0;
+  wrap.innerHTML = actions.map(a => `
+    <div class="cost-row2">
+      <span class="k">${esc(a.label)} <span class="hint">(${esc(a.kind)})</span></span>
+      <span class="v">${a.queries} ${a.queries === 1 ? 'query' : 'queries'}${
+        priced ? ' · ' + fmtUSD(a.usd) : ''}</span>
+      <span class="sub">${esc(a.note)}</span>
+    </div>`).join('')
+    + `<div class="check-note">Auto-refresh reloads only the visible tab, and skips
+       entirely while this browser tab is in the background. Nothing else polls.</div>`;
+}
+
+// Projection = measured cost per refresh × how often anyone refreshes. Leaving
+// the tab open adds nothing, so the only variable that matters is that rate.
+function renderSelfCostProjection() {
+  const out = document.getElementById('selfCostProjection');
+  if (!out) return;
+  const m = (selfCostData || {}).measured;
+  if (!m || !m.per_refresh_usd) { out.innerHTML = ''; return; }
+  const perHour = Math.max(0, parseFloat(document.getElementById('refreshRate').value) || 0);
+  const daily = m.per_refresh_usd * perHour * 24;
+  out.innerHTML = `
+    <div class="proj">
+      <div><div class="label">per day</div><div class="value">${fmtUSD(daily)}</div></div>
+      <div><div class="label">per week</div><div class="value">${fmtUSD(daily * 7)}</div></div>
+      <div><div class="label">per month</div><div class="value">${fmtUSD(daily * 30)}</div></div>
+    </div>
+    <div class="check-note">${fmtNum(perHour * 24)} refreshes/day ×
+      ${fmtUSD(m.per_refresh_usd)} each. Widening the time range raises the per-refresh
+      figure, because every panel then scans more job history.</div>`;
+}
+
+async function saveSetup() {
+  const projects = document.getElementById('setProjects').value
+    .split(',').map(s => s.trim()).filter(Boolean);
+  const patch = {
+    region: document.getElementById('setRegion').value.trim(),
+    days: parseInt(document.getElementById('setDays').value, 10) || 7,
+    projects,
+  };
+
+  const auto = parseInt(document.getElementById('setAutoRefresh').value, 10);
+  if (!Number.isNaN(auto)) {
+    patch.ui = { auto_refresh_minutes: auto };
+    applyAutoRefresh(auto);
+  }
+  try {
+    const r = await fetch(`${BRIDGE}/settings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    showToast(d.persisted ? 'Settings saved — refreshing…' : `Applied for this session (${d.location})`,
+              d.persisted ? undefined : 'warn');
+    closeSetup();
+    await loadRegions();
+    refreshAll();
+  } catch (e) {
+    showToast('Could not save settings: ' + e.message, 'error');
+  }
+}
+
+// ─── Refresh ─────────────────────────────────────────────────────────────────
+// Reloads the tab you are looking at, and marks the others stale so they reload
+// when you next open them. Every query here bills - INFORMATION_SCHEMA is never
+// served from cache - so nothing loads that nobody asked to see.
+async function refreshAll() {
+  const project = document.getElementById('projectSelect').value;
+  if (!project) return;
+  closeSearch();
+  statsDetailFor = null;   // the stat-card breakdowns are now stale
+  window._statsDetail = null;
+  Object.keys(tabLoadedFor).forEach(k => { tabLoadedFor[k] = null; });
+  const stamp = document.getElementById('lastRefresh');
+  if (stamp) stamp.textContent = 'loading…';
+  await ensureTab(activeTab, true);
+  if (stamp) {
+    stamp.textContent = 'as of ' + new Date().toLocaleTimeString();
+    stamp.title = 'Only the visible tab is loaded. Others load when opened.';
+  }
+}
+
+// The default tab: the six queries that answer "what is happening".
+async function loadActivityTab() {
+  await Promise.allSettled([
+    loadOverview(),
+    loadUsers(),
+    loadTables(),
+    loadPermissionErrors(),
+    loadFailedReasons(),
+    loadActivity(),
+    // Lazy, and deliberately not here:
+    //   stats_detail (7 queries) — on first stat-card hover
+    //   IAM + PAM                — on first user hover
+    //   self_cost                — when Setup opens
+  ]);
+}
+
+// ─── Stats detail (for stat-card tooltips) ───────────────────────────────────
+// 7 queries that only fill hover tooltips, so they wait until someone actually
+// hovers. That is the single biggest saving available in a refresh.
+let statsDetailFor = null;
+let statsDetailInflight = null;
+
+function ensureStatsDetail() {
+  const key = [
+    document.getElementById('projectSelect').value,
+    document.getElementById('regionSelect').value,
+    document.getElementById('daysSelect').value,
+  ].join('|');
+  if (statsDetailFor === key) return statsDetailInflight || Promise.resolve();
+  statsDetailFor = key;
+  statsDetailInflight = (async () => {
+    try {
+      const d = await api('/stats_detail');
+      if (!d.error) window._statsDetail = d;
+    } catch (e) { /* silent — the tooltip keeps saying loading */ }
+  })();
+  return statsDetailInflight;
+}
+
+function showStatTip(kind, ev) {
+  const d = window._statsDetail;
+  if (!d) {
+    tipShow('<div class="tip-title">Loading details…</div>', ev);
+    // Fetch now, then re-render this tooltip in place once it lands.
+    const pinnedKind = kind, pinnedEv = { clientX: ev.clientX, clientY: ev.clientY };
+    ensureStatsDetail().then(() => {
+      if (window._statsDetail) showStatTip(pinnedKind, pinnedEv);
+    });
+    return;
+  }
+  let html = '';
+  if (kind === 'total') {
+    html = '<div class="tip-title">Total jobs · breakdown</div>';
+    html += '<div class="tip-section">By statement type</div><table class="tip-table">';
+    for (const r of (d.by_statement || []).slice(0, 12)) {
+      html += `<tr><td>${esc(r.type)}</td><td>${fmtNum(r.total)}</td><td style="color:var(--accent)">${fmtNum(r.successful)} ok</td><td style="color:var(--danger)">${fmtNum(r.failed)} fail</td></tr>`;
+    }
+    html += '</table>';
+    html += '<div class="tip-section">By job type</div><table class="tip-table">';
+    for (const r of (d.by_job_type || [])) {
+      html += `<tr><td>${esc(r.type)}</td><td>${fmtNum(r.count)}</td></tr>`;
+    }
+    html += '</table>';
+  } else if (kind === 'successful') {
+    html = '<div class="tip-title">Successful jobs · by statement type</div><table class="tip-table">';
+    for (const r of (d.by_statement || [])) {
+      if (r.successful > 0) html += `<tr><td>${esc(r.type)}</td><td>${fmtNum(r.successful)}</td></tr>`;
+    }
+    html += '</table>';
+  } else if (kind === 'failed') {
+    html = '<div class="tip-title">Failed jobs · by reason</div><table class="tip-table">';
+    for (const r of (d.by_error_reason || [])) {
+      html += `<tr><td>${esc(r.reason)}</td><td>${r.count}</td></tr>`;
+    }
+    html += '</table>';
+  } else if (kind === 'perm') {
+    html = '<div class="tip-title">Permission errors · by user</div>';
+    const arr = d.perm_errors_by_user || [];
+    if (arr.length === 0) {
+      html += '<div class="tip-row"><span>none in this window</span><span></span></div>';
+    } else {
+      html += '<table class="tip-table">';
+      for (const r of arr) html += `<tr><td>${esc(r.user_email)}</td><td>${r.count}</td></tr>`;
+      html += '</table>';
+    }
+  } else if (kind === 'users') {
+    html = '<div class="tip-title">Unique users · top by jobs</div><table class="tip-table">';
+    for (const r of (d.top_users_by_jobs || [])) {
+      const errPart = r.errors > 0 ? `<span style="color:var(--danger)"> (${r.errors} err)</span>` : '';
+      html += `<tr><td>${esc(r.user_email)}</td><td>${fmtNum(r.jobs)}${errPart}</td></tr>`;
+    }
+    html += '</table>';
+  } else if (kind === 'bytes') {
+    html = '<div class="tip-title">Bytes processed · top contributors</div>';
+    html += '<div class="tip-section">By user</div><table class="tip-table">';
+    for (const r of (d.top_users_by_bytes || [])) {
+      html += `<tr><td>${esc(r.user_email)}</td><td>${fmtBytes(r.bytes)}</td></tr>`;
+    }
+    html += '</table>';
+    html += '<div class="tip-section">By table (read)</div><table class="tip-table">';
+    for (const r of (d.top_tables_by_bytes || [])) {
+      html += `<tr><td>${esc(r.table_name)}</td><td>${fmtBytes(r.bytes)}</td></tr>`;
+    }
+    html += '</table>';
+  }
+  tipShow(html, ev);
+}
+
+// ─── User hover (Top Users) ──────────────────────────────────────────────────
+// Community Edition: basic identity info only, no IAM/PAM lookup.
+let userTipCache = {};   // { email: {jobs, perm, errors, bytes} }
+
+function cacheUserTip(u) {
+  if (u && u.user_email) userTipCache[u.user_email.toLowerCase()] = u;
+}
+
+function showUserTip(email, ev) {
+  const u = userTipCache[(email || '').toLowerCase()] || {};
+  const html = `
+    <div class="tip-title">${esc(email)}</div>
+    <div class="tip-row"><span>identity type</span><span>${/\.gserviceaccount\.com$/i.test(email || '') ? 'service account' : 'user'}</span></div>
+    <div class="tip-row"><span>jobs</span><span>${fmtNum(u.jobs)}</span></div>
+    <div class="tip-row"><span>permission errors</span><span style="color:${u.permission_errors > 0 ? 'var(--danger)' : 'var(--accent)'}">${fmtNum(u.permission_errors)}</span></div>
+    <div class="tip-row"><span>other errors</span><span style="color:${u.errors > 0 ? 'var(--warn)' : 'var(--accent)'}">${fmtNum(u.errors)}</span></div>
+    ${u.bytes != null ? `<div class="tip-row"><span>bytes processed</span><span>${fmtBytes(u.bytes)}</span></div>` : ''}
+    <div class="tip-row" style="margin-top:8px;font-size:10px;color:var(--muted);"><span>click a user to filter Permission Errors</span><span></span></div>
+  `;
+  tipShow(html, ev);
+}
+
+// ─── Overview / stat cards ───────────────────────────────────────────────────
+async function loadOverview() {
+  try {
+    const d = await api('/overview');
+    if (d.error) {
+      showToast('Overview: ' + d.error, 'error');
+      return;
+    }
+    const total = Number(d.total_jobs || 0);
+    const ok    = Number(d.successful_jobs || 0);
+    const fail  = Number(d.failed_jobs || 0);
+    const perm  = Number(d.permission_errors || 0);
+    const users = Number(d.unique_users || 0);
+    const bytes = Number(d.total_bytes || 0);
+    const slot  = Number(d.total_slot_ms || 0);
+    document.getElementById('s-total').textContent = fmtNum(total);
+    document.getElementById('s-total-sub').textContent = (slot / 60000).toFixed(0) + ' slot-min';
+    document.getElementById('s-ok').textContent = fmtNum(ok);
+    document.getElementById('s-ok-sub').textContent = total ? ((ok/total)*100).toFixed(1) + '% success' : '';
+    document.getElementById('s-fail').textContent = fmtNum(fail);
+    document.getElementById('s-fail-sub').textContent = total ? ((fail/total)*100).toFixed(1) + '% failed' : '';
+    document.getElementById('s-perm').textContent = fmtNum(perm);
+    document.getElementById('s-perm-sub').textContent = perm > 0 ? 'access denied / forbidden' : 'none';
+    document.getElementById('s-users').textContent = fmtNum(users);
+    document.getElementById('s-bytes').textContent = fmtBytes(bytes);
+    document.getElementById('s-bytes-sub').textContent = '~ ' + fmtUSD(bytes / Math.pow(1024,4) * 5) + ' on-demand';
+  } catch (e) {
+    showToast('Overview load failed: ' + e.message, 'error');
+  }
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+async function loadUsers() {
+  const wrap = document.getElementById('usersList');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const d = await api('/users');
+    if (d.error) throw new Error(d.error);
+    const us = d.users || [];
+    document.getElementById('usersCount').textContent = us.length + ' shown';
+    if (us.length === 0) { wrap.innerHTML = '<div class="empty">no jobs in this window</div>'; return; }
+    wrap.innerHTML = us.map(u => {
+      cacheUserTip(u);
+      const errBadge = (u.permission_errors > 0)
+        ? `<span class="badge err">${u.permission_errors} perm</span>`
+        : (u.errors > 0 ? `<span class="badge warn">${u.errors} err</span>` : '');
+      return `<div class="list-row" data-id="${esc(u.user_email)}" data-type="user"
+                onclick="selectUserRow(this)"
+                onmouseenter="showUserTip('${esc(u.user_email)}', event)"
+                onmousemove="tipMove(event)"
+                onmouseleave="tipHide()">
+        <div class="name">${esc(u.user_email)}</div>
+        <div class="badges">${errBadge}</div>
+        <div class="stat-num">${fmtNum(u.jobs)}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">error: ${esc(e.message)}</div>`;
+  }
+}
+
+// ─── Tables ──────────────────────────────────────────────────────────────────
+async function loadTables() {
+  const wrap = document.getElementById('tablesList');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const d = await api('/tables');
+    if (d.error) throw new Error(d.error);
+    const ts = d.tables || [];
+    document.getElementById('tablesCount').textContent = ts.length + ' shown';
+    if (ts.length === 0) { wrap.innerHTML = '<div class="empty">no table activity</div>'; return; }
+    wrap.innerHTML = ts.map(t => {
+      const short = t.full_table.split('.').slice(-2).join('.');
+      return `<div class="list-row" data-id="${esc(short)}" data-type="table" onclick="selectFromList(this)">
+        <div class="name" title="${esc(t.full_table)}">${esc(short)}</div>
+        <div class="badges"><span class="badge">${t.unique_users} users</span></div>
+        <div class="stat-num">${fmtNum(t.query_count)}</div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">error: ${esc(e.message)}</div>`;
+  }
+}
+
+// ─── Permission errors ───────────────────────────────────────────────────────
+async function loadPermissionErrors() {
+  const wrap = document.getElementById('permErrorsList');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const userQ = userFilter ? `?user=${encodeURIComponent(userFilter)}` : '';
+    const jobsResp = await api('/permission_errors' + userQ);
+    const jobs = (jobsResp && !jobsResp.error)
+      ? (jobsResp.errors || []).map(e => ({ ...e, source: 'job' }))
+      : [];
+    const merged = jobs.sort((a, b) => {
+      const ta = new Date(a.creation_time || 0).getTime();
+      const tb = new Date(b.creation_time || 0).getTime();
+      return tb - ta;
+    });
+
+    document.getElementById('permCount').textContent =
+      `${merged.length} total${userFilter ? ' (filtered)' : ''} · from job history`;
+
+    if (merged.length === 0) {
+      wrap.innerHTML = `<div class="empty">${userFilter ? 'no permission errors for ' + esc(userFilter) : 'no permission errors — all clear'}</div>`;
+      return;
+    }
+    window._permErrors = merged;
+    wrap.innerHTML = merged.map((e, i) => {
+      const pill = e.source === 'audit'
+        ? '<span class="src-pill src-audit" title="from Cloud Logging audit (pre-creation denial)">audit</span>'
+        : '<span class="src-pill src-job" title="from INFORMATION_SCHEMA.JOBS_BY_PROJECT (job ran then errored)">job</span>';
+      return `
+        <div class="err-row" data-idx="${i}"
+             onmouseenter="showPermTip(this, event)"
+             onmousemove="tipMove(event)"
+             onmouseleave="tipHide()">
+          <div class="top">
+            <span class="who">${esc(e.user_email || '?')}</span>
+            <span>${esc(fmtTime(e.creation_time))} ${pill}</span>
+          </div>
+          <div class="reason">${esc(e.reason || 'unknown')}</div>
+          <div class="msg">${esc(e.message || '(no message)')}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">error: ${esc(e.message)}</div>`;
+  }
+}
+
+function showPermTip(row, ev) {
+  const i = +row.dataset.idx;
+  const e = (window._permErrors || [])[i];
+  if (!e) return;
+  const srcLabel = e.source === 'audit'
+    ? 'Cloud Logging audit log (pre-creation denial)'
+    : 'INFORMATION_SCHEMA.JOBS_BY_PROJECT (job ran, then errored)';
+  const html = `
+    <div class="tip-title">Permission error · ${esc(e.reason || 'unknown')}</div>
+    <div class="tip-row"><span>source</span><span>${esc(srcLabel)}</span></div>
+    <div class="tip-row"><span>user</span><span>${esc(e.user_email || '?')}</span></div>
+    <div class="tip-row"><span>time</span><span>${esc(fmtTime(e.creation_time))}</span></div>
+    ${e.method ? `<div class="tip-row"><span>method</span><span>${esc(e.method)}</span></div>` : ''}
+    ${e.resource ? `<div class="tip-row"><span>resource</span><span>${esc(e.resource)}</span></div>` : ''}
+    ${e.job_id ? `<div class="tip-row"><span>job id</span><span>${esc(e.job_id)}</span></div>` : ''}
+    ${e.log_id ? `<div class="tip-row"><span>log id</span><span>${esc(e.log_id)}</span></div>` : ''}
+    <div class="tip-block">${esc(e.message || '(no message)')}</div>
+    ${e.query_preview ? `<div class="tip-block" style="color:#a8d8b0;">${esc(e.query_preview)}</div>` : ''}
+  `;
+  tipShow(html, ev);
+}
+
+// ─── User filter (set from Top Users) ────────────────────────────────────────
+function setUserFilter(email) {
+  userFilter = email;
+  const chip = document.getElementById('permFilterChip');
+  document.getElementById('permFilterChipUser').textContent = email;
+  chip.classList.add('show');
+  loadPermissionErrors();
+}
+function clearUserFilter() {
+  userFilter = '';
+  document.getElementById('permFilterChip').classList.remove('show');
+  document.querySelectorAll('.list-row.selected').forEach(r => r.classList.remove('selected'));
+  loadPermissionErrors();
+}
+
+// ─── Failed reasons (bar list) ───────────────────────────────────────────────
+async function loadFailedReasons() {
+  const wrap = document.getElementById('reasonsList');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const d = await api('/failed_reasons');
+    if (d.error) throw new Error(d.error);
+    const rs = d.reasons || [];
+    lastReasonsData = rs;
+    if (rs.length === 0) { wrap.innerHTML = '<div class="empty">no failures</div>'; return; }
+    const max = rs[0].count || 1;
+    wrap.innerHTML = rs.map((r, i) => `
+      <div class="reason-bar" data-idx="${i}"
+           onmouseenter="showReasonTip(this, event)"
+           onmousemove="tipMove(event)"
+           onmouseleave="tipHide()">
+        <div class="top"><span class="label">${esc(r.reason)}</span><span class="num">${r.count}</span></div>
+        <div class="track"><div class="fill" style="width: ${(r.count/max*100).toFixed(1)}%"></div></div>
+      </div>
+    `).join('');
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">error: ${esc(e.message)}</div>`;
+  }
+}
+function showReasonTip(row, ev) {
+  const i = +row.dataset.idx;
+  const r = lastReasonsData[i];
+  if (!r) return;
+  const ex = r.examples || [];
+  const exHtml = ex.length
+    ? `<div class="tip-examples">${ex.map(e => `
+        <div class="tip-example">
+          <span class="who">${esc(e.user_email || '?')}</span>
+          <span class="when">${esc(fmtTime(e.creation_time))}</span>
+          <div class="what">${esc(e.message || '(no message)')}</div>
+        </div>`).join('')}</div>`
+    : '<div class="tip-row" style="margin-top:6px;"><span>no example messages available</span><span></span></div>';
+  const html = `
+    <div class="tip-title">${esc(r.reason)} · ${r.count} failure${r.count === 1 ? '' : 's'}</div>
+    <div class="tip-row"><span>showing</span><span>${ex.length} most recent</span></div>
+    ${exHtml}
+  `;
+  tipShow(html, ev);
+}
+
+// Never show a price without saying where it came from — live catalog,
+// the operator's own configured rate, or the built-in default.
+function renderCostRate(p) {
+  const el = document.getElementById('costRate');
+  if (!el) return;
+  if (!p) { el.textContent = '—'; return; }
+  CURRENCY_SYMBOL = CURRENCY_SYMBOLS[p.currency] || (p.currency + ' ');
+  if (p.model !== 'on_demand') {
+    el.textContent = `${p.model} pricing`;
+    el.title = 'Capacity/Editions bills slot-hours, so no per-TiB estimate is shown';
+    return;
+  }
+  const origin = (p.origins && p.origins.on_demand_per_tib) || '';
+  const live = origin.startsWith('billing catalog');
+  el.textContent = `${live ? '◉' : '○'} ${p.currency} ${p.on_demand_per_tib}/TiB`;
+  el.title = `${origin}\nPriced on bytes billed, not bytes scanned.`
+    + (p.catalog_error ? `\nCatalog: ${p.catalog_error}` : '');
+}
+
+// ─── Heatmap ─────────────────────────────────────────────────────────────────
+// One call, one BigQuery scan, two panels: the day×hour heatmap and the daily
+// spend bars are different roll-ups of the same grouping.
+async function loadActivity() {
+  const wrap = document.getElementById('heatmapWrap');
+  const chart = document.getElementById('spendChart');
+  wrap.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  chart.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  try {
+    const d = await api('/activity');
+    if (d.error) throw new Error(d.error);
+    renderSpend(d);
+    const hm = d.heatmap || [];
+    const grid = {};   // dow(1-7) -> hour(0-23) -> count
+    let max = 0;
+    for (const c of hm) {
+      grid[c.dow] = grid[c.dow] || {};
+      grid[c.dow][c.hour] = c.jobs;
+      if (c.jobs > max) max = c.jobs;
+    }
+    const days = ['', 'Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    let html = '<div class="heatmap-grid"><div></div>';
+    for (let h = 0; h < 24; h++) html += `<div class="label-row">${h}</div>`;
+    for (let dow = 1; dow <= 7; dow++) {
+      html += `<div class="label-col">${days[dow]}</div>`;
+      for (let h = 0; h < 24; h++) {
+        const v = (grid[dow] && grid[dow][h]) || 0;
+        const intensity = max ? v / max : 0;
+        const bg = `rgba(0,212,170,${(intensity * 0.95 + (v ? 0.05 : 0)).toFixed(2)})`;
+        html += `<div class="heatmap-cell" style="background:${bg}" title="${days[dow]} ${h}:00 — ${v} jobs"></div>`;
+      }
+    }
+    html += '</div>';
+    wrap.innerHTML = html;
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">error: ${esc(e.message)}</div>`;
+    chart.innerHTML = `<div class="empty">error: ${esc(e.message)}</div>`;
+  }
+}
+
+// Daily spend bars. Spike days (over 2× the median day) are highlighted,
+// because that is the question people actually bring to a cost view: not
+// "what did we spend" but "which day went wrong, and how wrong".
+function renderSpend(d) {
+  const chart = document.getElementById('spendChart');
+  const summary = document.getElementById('spendSummary');
+  const daily = d.daily || [];
+  const s = d.summary || {};
+  if (daily.length === 0) {
+    chart.innerHTML = '<div class="empty">no activity in this window</div>';
+    summary.textContent = '';
+    return;
+  }
+
+  renderCostRate(d.pricing);   // keeps the currency symbol in step
+  const max = Math.max(...daily.map(x => x.estimated_usd), 0) || 1;
+  // Label every bar at 14 days or fewer, then thin out so ticks never collide.
+  const step = Math.ceil(daily.length / 14);
+
+  chart.innerHTML = daily.map((x, i) => {
+    const pct = Math.max((x.estimated_usd / max) * 100, 0.8);
+    const cls = ['spend-bar', x.spike ? 'spike' : '', x.errors > 0 ? 'has-errors' : '']
+      .filter(Boolean).join(' ');
+    const label = (i % step === 0) ? x.date.slice(5) : '';
+    const title = [
+      x.date,
+      `${fmtUSD(x.estimated_usd)} · ${fmtBytes(x.bytes_billed)} billed`,
+      `${fmtNum(x.jobs)} jobs${x.errors ? ` · ${fmtNum(x.errors)} failed` : ''}`,
+      x.spike ? 'SPIKE — over 2× the median day' : '',
+    ].filter(Boolean).join('\n');
+    return `<div class="${cls}" title="${esc(title)}">
+      <div class="fill" style="height:${pct.toFixed(1)}%"></div>
+      <div class="tick">${esc(label)}</div>
+    </div>`;
+  }).join('');
+
+  const bits = [`${fmtUSD(s.total_usd)} total`, `${fmtUSD(s.median_usd)}/day median`];
+  if (s.spikes > 0) bits.push(`${s.spikes} spike${s.spikes === 1 ? '' : 's'}`);
+  summary.textContent = bits.join(' · ');
+  summary.title = s.peak ? `Most expensive day: ${s.peak}` : '';
+}
+
+// ─── List selection ─────────────────────────────────────────────────────────
+function selectFromList(el) {
+  document.querySelectorAll('.list-row.selected').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+// Top Users row click — set the user filter so the Permission Errors panel
+// (and anything else honoring userFilter) updates.
+function selectUserRow(el) {
+  document.querySelectorAll('.list-row.selected').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+  setUserFilter(el.dataset.id);
+}
+function clearSelection() {
+  document.querySelectorAll('.list-row.selected').forEach(r => r.classList.remove('selected'));
+}
+
+// ─── Search ──────────────────────────────────────────────────────────────────
+let searchTimer;
+document.getElementById('searchInput').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 280);
+});
+document.getElementById('searchInput').addEventListener('blur', () => {
+  setTimeout(closeSearch, 200);
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) closeSearch();
+});
+
+async function runSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  const box = document.getElementById('searchResults');
+  if (q.length < 2) { closeSearch(); return; }
+  try {
+    const project = document.getElementById('projectSelect').value;
+    const region = document.getElementById('regionSelect').value;
+    const days = document.getElementById('daysSelect').value;
+    const r = await fetch(`${BRIDGE}/search?project=${encodeURIComponent(project)}&region=${region}&days=${days}&q=${encodeURIComponent(q)}`);
+    const d = await r.json();
+    if (d.error) { box.innerHTML = `<div class="search-section">error: ${esc(d.error)}</div>`; box.classList.add('show'); return; }
+    let html = '';
+    if (d.users && d.users.length) {
+      html += '<div class="search-section">Users</div>';
+      html += d.users.map(u => `<div class="search-item" onclick="pickSearch('user','${esc(u.user_email)}')"><div>${esc(u.user_email)}</div><div class="meta">${u.jobs} jobs · ${u.errors} err</div></div>`).join('');
+    }
+    if (d.tables && d.tables.length) {
+      html += '<div class="search-section">Tables</div>';
+      html += d.tables.map(t => `<div class="search-item" onclick="pickSearch('table','${esc(t.table_name)}')"><div>${esc(t.table_name)}</div><div class="meta">${t.hits} hits</div></div>`).join('');
+    }
+    if (!html) html = '<div class="search-section">no matches</div>';
+    box.innerHTML = html;
+    box.classList.add('show');
+  } catch (e) {
+    box.innerHTML = `<div class="search-section">error: ${esc(e.message)}</div>`;
+    box.classList.add('show');
+  }
+}
+function closeSearch() { document.getElementById('searchResults').classList.remove('show'); }
+function pickSearch(type, id) {
+  document.getElementById('searchInput').value = id;
+  closeSearch();
+  // Clicking a user narrows the panels that honour the user filter.
+  if (type === 'user') setUserFilter(id);
+}
+
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+// Each pane loads only when opened, and only once per project/region/window, so
+// panels you never look at never cost a query. A refresh reloads the pane you
+// are on and invalidates the others, which then reload if you go back to them.
+let activeTab = localStorage.getItem('crucix_tab') || 'activity';
+const tabLoaders = {
+  activity: loadActivityTab,
+  workload: () => Promise.resolve(),
+  cost: () => Promise.resolve(),
+  findings: () => Promise.resolve(),
+};
+const tabLoadedFor = {};      // tab -> the data key it currently holds
+
+function dataKey() {
+  return [
+    document.getElementById('projectSelect').value,
+    document.getElementById('regionSelect').value,
+    document.getElementById('daysSelect').value,
+  ].join('|');
+}
+
+function showTab(name) {
+  activeTab = name;
+  localStorage.setItem('crucix_tab', name);
+  document.querySelectorAll('.tab-pane').forEach(p => {
+    p.classList.toggle('active', p.id === 'tab-' + name);
+  });
+  document.querySelectorAll('#tabBar button').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name);
+  });
+  ensureTab(name);
+}
+
+// Load a tab's data unless what it holds is already current.
+async function ensureTab(name, force) {
+  const project = document.getElementById('projectSelect').value;
+  if (!project) return;
+  const key = dataKey();
+  if (!force && tabLoadedFor[name] === key) return;
+  tabLoadedFor[name] = key;
+  try {
+    await tabLoaders[name]();
+  } catch (e) {
+    tabLoadedFor[name] = null;   // let a later visit retry
+  }
+}
+
+// ─── Auto-refresh ────────────────────────────────────────────────────────────
+// Refreshes the visible tab on an interval. A hidden tab is skipped entirely -
+// there is no point billing for a screen nobody is looking at - and the skipped
+// refresh happens when the page becomes visible again.
+let autoRefreshMinutes = 0;
+let autoRefreshTimer = null;
+let missedWhileHidden = false;
+
+function applyAutoRefresh(minutes) {
+  autoRefreshMinutes = Math.max(0, Number(minutes) || 0);
+  localStorage.setItem('crucix_auto_refresh', String(autoRefreshMinutes));
+  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+  const chip = document.getElementById('autoRefreshChip');
+  if (!autoRefreshMinutes) {
+    if (chip) { chip.textContent = 'auto-refresh off'; chip.title = ''; }
+    return;
+  }
+  if (chip) {
+    chip.textContent = `auto every ${autoRefreshMinutes}m`;
+    chip.title = `Refreshes the visible tab every ${autoRefreshMinutes} minutes.`
+      + ' Skipped while this tab is in the background.';
+  }
+  autoRefreshTimer = setInterval(() => {
+    if (document.hidden) { missedWhileHidden = true; return; }
+    refreshAll();
+  }, autoRefreshMinutes * 60 * 1000);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && missedWhileHidden && autoRefreshMinutes) {
+    missedWhileHidden = false;
+    refreshAll();
+  }
+});
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+loadWhoAmI();
+loadProjects();
+showTab(activeTab);
+applyAutoRefresh(localStorage.getItem('crucix_auto_refresh') || 60);
+</script>
+</body>
+</html>

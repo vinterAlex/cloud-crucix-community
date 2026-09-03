@@ -1,0 +1,87 @@
+Cloud Crucix Community Edition - what the service account needs
+================================================================
+
+Cloud Crucix is read-only. It reads BigQuery JOB METADATA (who ran what,
+how long it took, what it scanned, what failed). It never reads the contents
+of your tables and never writes anything.
+
+Grant the roles below on each PROJECT you want to inspect.
+
+
+---------------------------------------------------------------
+REQUIRED - without these, nothing works
+---------------------------------------------------------------
+roles/bigquery.jobUser
+    bigquery.jobs.create
+    Lets the tool run its own metadata queries. Without it every panel shows
+    "Access Denied" - it cannot even ask the question.
+
+roles/bigquery.resourceViewer
+    bigquery.jobs.listAll (plus jobs.get / jobs.list)
+    This is the heart of the dashboard: listAll is what makes OTHER people's
+    jobs visible. With only jobUser, the dashboard shows one user and almost
+    no activity.
+
+
+---------------------------------------------------------------
+STRONGLY RECOMMENDED
+---------------------------------------------------------------
+roles/bigquery.metadataViewer
+    bigquery.datasets.get, bigquery.tables.list/get (metadata only, no data)
+    Enables region auto-detection and storage information.
+
+roles/browser
+    resourcemanager.projects.get / list
+    Fills the project picker with every project the account can see.
+
+
+---------------------------------------------------------------
+OPTIONAL (Full Edition only)
+---------------------------------------------------------------
+roles/iam.securityReviewer
+    Read the project IAM policy for user role tooltips.
+    (Not used in Community Edition)
+
+roles/logging.privateLogViewer
+    Read audit logs for permission denials that never became a job.
+    (Not used in Community Edition)
+
+roles/privilegedaccessmanager.viewer
+    List PAM entitlements and grants.
+    (Not used in Community Edition)
+
+
+---------------------------------------------------------------
+WHAT ABOUT roles/bigquery.dataViewer?
+---------------------------------------------------------------
+Do NOT grant it. It changes nothing in the dashboard and it lets the key
+read every row of every table. The dashboard reads job metadata only.
+
+
+---------------------------------------------------------------
+COPY-PASTE SETUP
+---------------------------------------------------------------
+    PROJECT=my-project
+    SA=crucix-reader
+
+    gcloud iam service-accounts create $SA \
+        --project=$PROJECT --display-name="Cloud Crucix (read-only)"
+
+    SA_EMAIL=$SA@$PROJECT.iam.gserviceaccount.com
+
+    # required
+    gcloud projects add-iam-policy-binding $PROJECT \
+        --member="serviceAccount:$SA_EMAIL" --role="roles/bigquery.jobUser"
+    gcloud projects add-iam-policy-binding $PROJECT \
+        --member="serviceAccount:$SA_EMAIL" --role="roles/bigquery.resourceViewer"
+
+    # strongly recommended
+    gcloud projects add-iam-policy-binding $PROJECT \
+        --member="serviceAccount:$SA_EMAIL" --role="roles/bigquery.metadataViewer"
+    gcloud projects add-iam-policy-binding $PROJECT \
+        --member="serviceAccount:$SA_EMAIL" --role="roles/browser"
+
+    gcloud iam service-accounts keys create secrets/crucix-key.json \
+        --iam-account=$SA_EMAIL
+
+Keep that key file in the secrets folder and nowhere else.

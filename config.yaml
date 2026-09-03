@@ -1,0 +1,33 @@
+# Cloud Crucix Community Edition - configuration
+# See README.md for every option.
+
+projects: []
+region: null
+regions: []
+days: 7
+
+auth:
+  key: null
+  subject: null
+  lifetime: 3600
+
+safety:
+  max_bytes_billed_gb: 50
+  max_error_count: 500
+
+discovery:
+  regions: true
+  pricing: true
+  projects: true
+  cache_minutes: 60
+  pricing_cache_minutes: 1440
+
+ui:
+  title: "Cloud Crucix Community"
+  price_per_tib_override: null
+  auto_refresh_seconds: 0
+  theme: dark
+
+server:
+  host: 0.0.0.0
+  port: 5006

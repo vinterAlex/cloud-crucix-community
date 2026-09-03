@@ -1,0 +1,14 @@
+# Build outputs - generated on demand by build-ship.ps1
+dist/
+
+# Local runtime state - never commit
+secrets/
+*.json
+config.local.json
+output/
+
+# Python / tooling
+__pycache__/
+.venv/
+*.pyc
+*.tar

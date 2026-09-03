@@ -1,0 +1,9 @@
+secrets/
+output/
+*.json
+config.local.json
+__pycache__/
+.venv/
+dist/
+*.tar
+demo_sharing.txt
