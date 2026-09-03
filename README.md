@@ -95,7 +95,7 @@ GETTING THE FULL EDITION
 The Community Edition is a free teaser. The **Full Edition** adds all the premium
 features above — the complete cost-analysis, workload, and reporting suite.
 
-**Full Edition price: 1,500 RON (~$330 USD), one-time.**
+**Full Edition price: ~$330 USD, one-time.**
 
 Available on Lemon Squeezy: **<link to be added once published>**
 
