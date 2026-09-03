@@ -1,0 +1,31 @@
+Cloud Crucix — Proprietary License
+===================================
+
+Copyright (c) 2026. All rights reserved.
+
+Cloud Crucix is provided in two editions:
+
+  Community Edition (free)
+  ------------------------
+  Released publicly (e.g. on GitHub) for evaluation and personal use. You may
+  view, run, and modify the source for your own evaluation. You may not
+  redistribute, sublicense, or sell the Community Edition, nor remove any
+  branding or upgrade placeholders.
+
+  Full Edition (paid)
+  -------------------
+  Distributed separately as a one-time purchase (see the project's listing).
+  Grants a perpetual, non-exclusive, non-transferable license to use the Full
+  Edition on your own infrastructure.
+
+Restrictions (both editions)
+----------------------------
+- No redistribution or resale of the software or derived works.
+- No claim of affiliation, endorsement, or sponsorship.
+- The software is provided "AS IS", without warranty of any kind, express or
+  implied, including but not limited to the warranties of merchantability,
+  fitness for a particular purpose, and non-infringement. In no event shall the
+  authors or copyright holders be liable for any claim, damages, or other
+  liability arising from, out of, or in connection with the software.
+
+For commercial licensing or questions, contact the author.

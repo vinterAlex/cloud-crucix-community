@@ -31,6 +31,7 @@ if not exist "secrets\*.json" (
     echo   It should be a .json file inside this folder:
     echo       %CD%\secrets
     echo   ^(Ask your IT/cloud team - it only needs READ access to BigQuery.^)
+    echo   See secrets\README.txt for details.
     echo.
     echo   Press ENTER to continue anyway: the page will open, but it
     echo   will not be able to read BigQuery without a key.

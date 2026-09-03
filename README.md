@@ -58,17 +58,46 @@ Additional features:
 
 QUICK START
 -------------
-1. Install Docker Desktop (or Python 3.10+)
-2. Place a service-account JSON key in the secrets/ folder
-3. Double-click RUN-ME.bat (or run docker build + docker run)
-4. Open http://localhost:5006
+Requires **Docker Desktop** (installed and running) and a **Google service-account
+key** that can READ your BigQuery project. That's it — no Python, no gcloud, no
+setup. See [PERMISSIONS.txt](PERMISSIONS.txt) for the exact IAM roles to grant.
 
-See RUN-ME.txt for full instructions.
+Ready? Test it in two steps:
+
+1. **Double-click `RUN-ME.bat`** — it creates a `secrets\` folder next to it
+   (if missing), builds the image, and starts a fresh service-account check.
+2. **Drop your key in** — put a service-account `.json` key into `secrets\`:
+   ```
+   cloud-crucix-community\secrets\my-key.json
+   ```
+   The file name doesn't matter as long as it ends in `.json`. Then re-run
+   `RUN-ME.bat`.
+
+That's it. Your browser opens `http://localhost:5006`, and you pick your project —
+the region and on-demand price fill in automatically. The **Activity** tab loads on
+its own.
+
+> First run without a key is expected: RUN-ME.bat tells you no key was found,
+> creates the `secrets\` folder, and lets you continue. Add the key and re-run.
+
+Without Docker:
+```
+pip install -r requirements.txt
+python bridge.py
+```
+Same `secrets\` folder, then open `http://localhost:5006`.
+
+Full instructions: [RUN-ME.txt](RUN-ME.txt).
 
 
 GETTING THE FULL EDITION
----------------------------
-Contact us for the Full Edition to unlock all features:
+--------------------------
+The Community Edition is a free teaser. The **Full Edition** adds all the premium
+features above — the complete cost-analysis, workload, and reporting suite.
+
+**Full Edition price: 1,500 RON (~$330 USD), one-time.**
+
+Available on Lemon Squeezy: **<link to be added once published>**
 
   - All 4 tabs with full data
   - Deep analysis engine with 8 risk checks
@@ -82,7 +111,7 @@ REQUIREMENTS
 --------------
 - Docker Desktop (or Python 3.10+)
 - A Google Cloud service account with BigQuery read access
-- See PERMISSIONS.txt for the exact roles needed
+- See [PERMISSIONS.txt](PERMISSIONS.txt) for the exact roles needed
 
 
 TECHNICAL DETAILS
@@ -92,4 +121,4 @@ TECHNICAL DETAILS
 - Database: None — reads BigQuery INFORMATION_SCHEMA metadata only
 - Auth: Service account JSON key (no gcloud, no ADC)
 - Network: All queries run locally, nothing uploaded
-- License: Proprietary — see LICENSE.txt
+- License: Proprietary — see [LICENSE.txt](LICENSE.txt)

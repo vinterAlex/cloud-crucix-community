@@ -2,7 +2,8 @@
 dist/
 
 # Local runtime state - never commit
-secrets/
+secrets/*
+!secrets/README.txt
 *.json
 config.local.json
 output/
