@@ -97,7 +97,7 @@ features above — the complete cost-analysis, workload, and reporting suite.
 
 **Full Edition price: ~$330 USD, one-time.**
 
-Available on Lemon Squeezy: **<link to be added once published>**
+Available on Lemon Squeezy: https://bigquery-cost-report.lemonsqueezy.com/checkout/buy/a1d38055-8720-4f65-bfcb-05c8606389ca
 
   - All 4 tabs with full data
   - Deep analysis engine with 8 risk checks
