@@ -97,7 +97,7 @@ features above — the complete cost-analysis, workload, and reporting suite.
 
 **Full Edition price: ~$330 USD, one-time.**
 
-Available on Lemon Squeezy: [https://bigquery-cost-report.lemonsqueezy.com/checkout/buy/a1d38055-8720-4f65-bfcb-05c8606389ca](https://bigquery-cost-report.lemonsqueezy.com/checkout/buy/a1d38055-8720-4f65-bfcb-05c8606389ca)
+**[Buy the Full Edition on Lemon Squeezy →](https://bigquery-cost-report.lemonsqueezy.com/checkout/buy/a1d38055-8720-4f65-bfcb-05c8606389ca)**
 
 🚨 Early-Bird Discount: Use code **CRUCIX25** for 25% off (First 10 buyers only) ⏳
 

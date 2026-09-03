@@ -103,7 +103,7 @@ The Full Edition adds:
   - Configurable analysis thresholds
   - No 30-day time window limit
 
-Full Edition price: ~$330 USD, one-time. Available on
-Lemon Squeezy: https://bigquery-cost-report.lemonsqueezy.com/checkout/buy/a1d38055-8720-4f65-bfcb-05c8606389ca
+Full Edition price: ~$330 USD, one-time. Buy the Full Edition on Lemon Squeezy:
+https://bigquery-cost-report.lemonsqueezy.com/checkout/buy/a1d38055-8720-4f65-bfcb-05c8606389ca
 
 Early-Bird Discount: Use code CRUCIX25 for 25% off (First 10 buyers only)
