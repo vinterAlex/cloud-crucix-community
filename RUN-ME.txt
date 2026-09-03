@@ -103,5 +103,5 @@ The Full Edition adds:
   - Configurable analysis thresholds
   - No 30-day time window limit
 
-Full Edition price: 1,500 RON (~$330 USD), one-time. Available on
+Full Edition price: ~$330 USD, one-time. Available on
 Lemon Squeezy: <link to be added once published>
