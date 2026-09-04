@@ -55,6 +55,8 @@ Unlock the complete cost-analysis, workload attribution, and security auditing e
 
 👉 **[Buy Cloud Crucix Full Edition on LemonSqueezy](https://bigquery-cost-report.lemonsqueezy.com/checkout/buy/a1d38055-8720-4f65-bfcb-05c8606389ca)**
 
+📄 **[Download Sample Diagnostic Report (PDF)](bigquery-cost-report-anonymized.pdf)** — *See the exact findings, cost attributions, and risk flags generated for a production environment.*
+
 > 🚨 **Launch Special:** Use promo code **`CRUCIX25`** for **25% OFF** *(First 10 buyers only)*.
 
 ---
